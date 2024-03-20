@@ -1,0 +1,15 @@
+module.exports = {
+  WELCOME_MESSAGE: 'Добро пожаловать!',
+  ENTER_LOGIN: 'Для входа введите ваш логин:',
+  ENTER_PASSWORD: 'Теперь введите ваш пароль:',
+  INVALID_CREDENTIALS: 'Неверный логин или пароль. Попробуйте снова.',
+  YOUR_TICKETS: 'Ваши заявки:',
+  NO_TICKETS: 'У вас нет заявок.',
+  PENDING_TICKETS: 'Текущие неготовые заявки:',
+  NO_PENDING_TICKETS: 'Нет текущих неготовых заявок.',
+  ACCESS_DENIED: 'У вас нет доступа к этой команде.',
+  ERROR: 'Произошла ошибка. Попробуйте позже.',
+  LANGUAGE_PROMPT: 'Пожалуйста, выберите ваш язык:',
+  LANGUAGE_SET_TO_RU: 'Язык установлен на русский.',
+  LANGUAGE_SET_TO_EN: 'Язык установлен на английский.',
+};

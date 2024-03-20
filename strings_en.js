@@ -1,0 +1,15 @@
+module.exports = {
+  WELCOME_MESSAGE: 'Welcome!',
+  ENTER_LOGIN: 'Please enter your login:',
+  ENTER_PASSWORD: 'Now enter your password:',
+  INVALID_CREDENTIALS: 'Invalid login or password. Please try again.',
+  YOUR_TICKETS: 'Your tickets:',
+  NO_TICKETS: 'You have no tickets.',
+  PENDING_TICKETS: 'Current pending tickets:',
+  NO_PENDING_TICKETS: 'No current pending tickets.',
+  ACCESS_DENIED: 'You do not have access to this command.',
+  ERROR: 'An error occurred. Please try again later.',
+  LANGUAGE_PROMPT: 'Please select your language:',
+  LANGUAGE_SET_TO_RU: 'Language set to Russian.',
+  LANGUAGE_SET_TO_EN: 'Language set to English.',
+};

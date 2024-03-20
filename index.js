@@ -5,6 +5,15 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
+const RU_STRINGS = require('./strings_ru');
+const EN_STRINGS = require('./strings_en');
+
+// Function to select strings depending on the selected language
+function getLocalizedString(key, lang) {
+  const strings = lang === 'en' ? EN_STRINGS : RU_STRINGS;
+  return strings[key] || ''; // Return an empty string if the key is not found
+}
+
 const BOT_TOKEN = process.env.API_KEY_BOT;
 const API_URL = process.env.API_URL;
 
@@ -15,21 +24,21 @@ const USER_ROLE = { ADMIN: 'Admin', USER: 'User' }
 
 bot.use(session());
 
-// Объединенное промежуточное ПО для проверки аутентификации пользователя, ввода логина и пароля, и получения информации о пользователе
+// Combined middleware for user authentication, login, and password input, and user information retrieval
 bot.use(async (ctx, next) => {
   if (ctx.session.isAuthenticated) {
     await next();
   } else {
     if (!ctx.session.step) {
       ctx.session.step = SESSION_STEP.EMAIL;
-      ctx.reply('Для входа введите ваш логин:');
+      ctx.reply(getLocalizedString('ENTER_LOGIN', ctx.session.language));
       return;
     }
   
     if (ctx.session.step === SESSION_STEP.EMAIL) {
       ctx.session.email = ctx.message.text;
       ctx.session.step = SESSION_STEP.PASSWORD;
-      ctx.reply('Теперь введите ваш пароль:');
+      ctx.reply(getLocalizedString('ENTER_PASSWORD', ctx.session.language));
       return;
     }
   
@@ -45,21 +54,21 @@ bot.use(async (ctx, next) => {
         ctx.session.token = response.data.token;
         ctx.session.refreshToken = response.data.refreshToken;
 
-        console.log('Успешная аутентификация:', response.data);
-        ctx.reply(`Добро пожаловать, ${ctx.session.user.email}!`);
+        console.log('Successful authentication:', response.data);
+        ctx.reply(getLocalizedString('WELCOME_MESSAGE', ctx.session.language));
       } catch (error) {
         ctx.session.step = '';
         ctx.session.email = '';
         
-        console.error('Ошибка аутентификации:', error);
-        ctx.reply('Неверный логин или пароль. Попробуйте снова.');
+        console.error('Authentication error:', error);
+        ctx.reply(getLocalizedString('INVALID_CREDENTIALS', ctx.session.language));
         return;
       }
     }
   }
 });
 
-// Команда для просмотра заявок пользователя
+// Command to view user tickets
 bot.command('tickets', async (ctx) => {
   const userId = ctx.session.user.id;
   const token = ctx.session.token;
@@ -70,27 +79,27 @@ bot.command('tickets', async (ctx) => {
         Authorization: `Bearer ${token}`
       }
     });
-    
+
     const tickets = response.data.items;
 
     if (tickets.length > 0) {
-      let message = 'Ваши заявки:\n';
+      let message = getLocalizedString('YOUR_TICKETS', ctx.session.language) + '\n';
 
       tickets.forEach(ticket => {
-          message += `ID: ${ticket.id}, Статус: ${ticket.isDone ? 'Готова' : 'Не готова'}\n`;
+          message += `ID: ${ticket.id}, ${getLocalizedString(ticket.isDone ? 'DONE' : 'NOT_DONE', ctx.session.language)}\n`;
       });
 
       ctx.reply(message);
     } else {
-      ctx.reply('У вас нет заявок.');
+      ctx.reply(getLocalizedString('NO_TICKETS', ctx.session.language));
     }
   } catch (error) {
-      console.error('Ошибка получения заявок:', error);
-      ctx.reply('Произошла ошибка. Попробуйте позже.');
+      console.error('Error fetching tickets:', error);
+      ctx.reply(getLocalizedString('ERROR', ctx.session.language));
   }
 });
 
-// Команда для просмотра текущих неготовых заявок (только для администраторов)
+// Command to view current pending tickets (only for administrators)
 bot.command('pending', async (ctx) => {
   const userRole = ctx.session.user.role;
   const token = ctx.session.token;
@@ -106,7 +115,7 @@ bot.command('pending', async (ctx) => {
       const pendingTickets = response.data.items.filter(ticket => !ticket.isDone);
 
       if (pendingTickets.length > 0) {
-          let message = 'Текущие неготовые заявки:\n';
+          let message = getLocalizedString('PENDING_TICKETS', ctx.session.language) + '\n';
 
           pendingTickets.forEach(ticket => {
               message += `ID: ${ticket.id}\n`;
@@ -114,15 +123,38 @@ bot.command('pending', async (ctx) => {
 
           ctx.reply(message);
       } else {
-          ctx.reply('Нет текущих неготовых заявок.');
+          ctx.reply(getLocalizedString('NO_PENDING_TICKETS', ctx.session.language));
       }
     } catch (error) {
-      console.error('Ошибка получения неготовых заявок:', error);
-      ctx.reply('Произошла ошибка. Попробуйте позже.');
+      console.error('Error fetching pending tickets:', error);
+      ctx.reply(getLocalizedString('ERROR', ctx.session.language));
     }
   } else {
-    ctx.reply('У вас нет доступа к этой команде.');
+    ctx.reply(getLocalizedString('ACCESS_DENIED', ctx.session.language));
   }
+});
+
+// Command to set user language
+bot.command('language', async (ctx) => {
+  ctx.reply(getLocalizedString('LANGUAGE_PROMPT', ctx.session.language), {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🇷🇺 Russian', callback_data: 'ru' }],
+        [{ text: '🇬🇧 English', callback_data: 'en' }]
+      ]
+    }
+  });
+});
+
+// Language selection callback handler
+bot.action('ru', async (ctx) => {
+  ctx.session.language = 'ru';
+  ctx.reply(getLocalizedString('LANGUAGE_SET_TO_RU', 'ru'));
+});
+
+bot.action('en', async (ctx) => {
+  ctx.session.language = 'en';
+  ctx.reply(getLocalizedString('LANGUAGE_SET_TO_EN', 'en'));
 });
 
 bot.launch();
