@@ -24,31 +24,34 @@ const USER_ROLE = { ADMIN: 'Admin', USER: 'User' }
 
 bot.use(session());
 
-// Combined middleware for user authentication, login, and password input, and user information retrieval
+// Middleware to greet the user on the first run
 bot.use(async (ctx, next) => {
-  if (ctx.session.isAuthenticated) {
-    await next();
-  } else {
-    if (!ctx.session.step) {
-      ctx.session.step = SESSION_STEP.EMAIL;
-      ctx.reply(getLocalizedString('ENTER_LOGIN', ctx.session.language));
-      return;
-    }
-  
+  if (!ctx.session.isFirstRun) {
+    ctx.session.isFirstRun = true;
+    ctx.reply(getLocalizedString('WELCOME_MESSAGE', ctx.session.language));
+    return;
+  }
+
+  await next();
+});
+
+// Middleware to handle user authentication
+bot.use(async (ctx, next) => {
+  if (!ctx.session.isAuthenticated) {
     if (ctx.session.step === SESSION_STEP.EMAIL) {
       ctx.session.email = ctx.message.text;
       ctx.session.step = SESSION_STEP.PASSWORD;
       ctx.reply(getLocalizedString('ENTER_PASSWORD', ctx.session.language));
       return;
     }
-  
+
     if (ctx.session.step === SESSION_STEP.PASSWORD) {
       const email = ctx.session.email;
       const password = ctx.message.text;
-  
+
       try {
         const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-        
+
         ctx.session.isAuthenticated = true;
         ctx.session.user = response.data.user;
         ctx.session.token = response.data.token;
@@ -59,13 +62,21 @@ bot.use(async (ctx, next) => {
       } catch (error) {
         ctx.session.step = '';
         ctx.session.email = '';
-        
+
         console.error('Authentication error:', error);
         ctx.reply(getLocalizedString('INVALID_CREDENTIALS', ctx.session.language));
         return;
       }
     }
   }
+
+  await next();
+});
+
+// Command to start the authentication process
+bot.command('login', async (ctx) => {
+  ctx.session.step = SESSION_STEP.EMAIL;
+  ctx.reply(getLocalizedString('ENTER_LOGIN', ctx.session.language));
 });
 
 // Command to view user tickets
@@ -146,7 +157,6 @@ bot.command('language', async (ctx) => {
   });
 });
 
-// Language selection callback handler
 bot.action('ru', async (ctx) => {
   ctx.session.language = 'ru';
   ctx.reply(getLocalizedString('LANGUAGE_SET_TO_RU', 'ru'));

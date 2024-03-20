@@ -1,5 +1,5 @@
 module.exports = {
-  WELCOME_MESSAGE: 'Welcome!',
+  WELCOME_MESSAGE: 'Welcome! Thank you for using our bot.\n\nTo get started, enter the command /login to begin the authentication process.\n\nIf you have any questions or need assistance, feel free to ask. Happy using! 🤖✨',
   ENTER_LOGIN: 'Please enter your login:',
   ENTER_PASSWORD: 'Now enter your password:',
   INVALID_CREDENTIALS: 'Invalid login or password. Please try again.',
