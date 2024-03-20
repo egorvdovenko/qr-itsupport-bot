@@ -102,7 +102,7 @@ bot.action('tickets', async (ctx) => {
   const token = ctx.session.token;
 
   try {
-    const response = await axios.get(`${API_URL}/tickets?userId=${userId}`, {
+    const response = await axios.get(`${API_URL}/tickets?userId=${userId}&includeDevice=true`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -111,13 +111,25 @@ bot.action('tickets', async (ctx) => {
     const tickets = response.data.items;
 
     if (tickets.length > 0) {
-      let message = getLocalizedString('YOUR_TICKETS', ctx.session.language) + '\n';
+      let message = `<b>${getLocalizedString('YOUR_TICKETS', ctx.session.language)}</b>\n\n`;
 
       tickets.forEach(ticket => {
-          message += `ID: ${ticket.id}, ${getLocalizedString(ticket.isDone ? 'DONE' : 'NOT_DONE', ctx.session.language)}\n`;
+        message += '<b>──────────────────</b>\n'; // Separator
+
+        message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`; // Ticket title
+        message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`; // Ticket description
+        message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'DONE' : 'NOT_DONE', ctx.session.language)}\n`; // Ticket status
+
+        if (ticket.device) {
+          message += `<b>${getLocalizedString('TICKET_DEVICE', ctx.session.language)}:</b>\n`; // Device section
+          message += `  <b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`; // Device title
+          message += `  <b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`; // Device inventory number
+        }
+
+        message += '\n'; // Add empty line between tickets
       });
 
-      ctx.reply(message);
+      ctx.replyWithHTML(message);
     } else {
       ctx.reply(getLocalizedString('NO_TICKETS', ctx.session.language));
     }
@@ -134,7 +146,7 @@ bot.action('pending', async (ctx) => {
 
   if (userRole === USER_ROLE.ADMIN) {
     try {
-      const response = await axios.get(`${API_URL}/tickets`, {
+      const response = await axios.get(`${API_URL}/tickets?includeDevice=true`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -143,22 +155,31 @@ bot.action('pending', async (ctx) => {
       const pendingTickets = response.data.items.filter(ticket => !ticket.isDone);
 
       if (pendingTickets.length > 0) {
-          let message = getLocalizedString('PENDING_TICKETS', ctx.session.language) + '\n';
+        let message = `<b>${getLocalizedString('PENDING_TICKETS', ctx.session.language)}</b>\n\n`;
 
-          pendingTickets.forEach(ticket => {
-              message += `ID: ${ticket.id}\n`;
-          });
+        pendingTickets.forEach(ticket => {
+          message += '<b>──────────────────</b>\n'; // Separator
 
-          ctx.reply(message);
+          message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`; // Ticket title
+          message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`; // Ticket description
+
+          if (ticket.device) {
+            message += `<b>${getLocalizedString('TICKET_DEVICE', ctx.session.language)}:</b>\n`; // Device section
+            message += `  <b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`; // Device title
+            message += `  <b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`; // Device inventory number
+          }
+
+          message += '\n'; // Add empty line between tickets
+        });
+
+        ctx.replyWithHTML(message);
       } else {
-          ctx.reply(getLocalizedString('NO_PENDING_TICKETS', ctx.session.language));
+        ctx.reply(getLocalizedString('NO_PENDING_TICKETS', ctx.session.language));
       }
     } catch (error) {
       console.error('Error fetching pending tickets:', error);
       ctx.reply(getLocalizedString('ERROR', ctx.session.language));
     }
-  } else {
-    ctx.reply(getLocalizedString('ACCESS_DENIED', ctx.session.language));
   }
 });
 
