@@ -37,7 +37,7 @@ bot.use(async (ctx, next) => {
 
 // Middleware to handle user authentication
 bot.use(async (ctx, next) => {
-  if (!ctx.session.isAuthenticated) {
+  if (!ctx.session.isAuthenticated && ctx.message.text !== '/login') {
     if (ctx.session.step === SESSION_STEP.EMAIL) {
       ctx.session.email = ctx.message.text;
       ctx.session.step = SESSION_STEP.PASSWORD;
@@ -68,6 +68,9 @@ bot.use(async (ctx, next) => {
         return;
       }
     }
+
+    ctx.reply(getLocalizedString('NOT_AUTHENTICATED', ctx.session.language));
+    return;
   }
 
   await next();
