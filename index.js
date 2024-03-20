@@ -58,7 +58,8 @@ bot.use(async (ctx, next) => {
         ctx.session.refreshToken = response.data.refreshToken;
 
         console.log('Successful authentication:', response.data);
-        ctx.reply(getLocalizedString('WELCOME_MESSAGE', ctx.session.language));
+        ctx.reply(getLocalizedString('VIEW_AVAILABLE_ACTIONS', ctx.session.language));
+        return;
       } catch (error) {
         ctx.session.step = '';
         ctx.session.email = '';
@@ -82,8 +83,21 @@ bot.command('login', async (ctx) => {
   ctx.reply(getLocalizedString('ENTER_LOGIN', ctx.session.language));
 });
 
-// Command to view user tickets
-bot.command('tickets', async (ctx) => {
+// Command to view available actions
+bot.command('actions', async (ctx) => {
+  ctx.replyWithMarkdown(getLocalizedString('AVAILABLE_ACTIONS', ctx.session.language), {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: getLocalizedString('VIEW_TICKETS', ctx.session.language), callback_data: 'tickets' }],
+        [{ text: getLocalizedString('VIEW_PENDING_TICKETS', ctx.session.language), callback_data: 'pending' }],
+        [{ text: getLocalizedString('CHANGE_LANGUAGE', ctx.session.language), callback_data: 'language' }]
+      ]
+    }
+  });
+});
+
+// Action to view user tickets
+bot.action('tickets', async (ctx) => {
   const userId = ctx.session.user.id;
   const token = ctx.session.token;
 
@@ -113,8 +127,8 @@ bot.command('tickets', async (ctx) => {
   }
 });
 
-// Command to view current pending tickets (only for administrators)
-bot.command('pending', async (ctx) => {
+// Action to view current pending tickets (only for administrators)
+bot.action('pending', async (ctx) => {
   const userRole = ctx.session.user.role;
   const token = ctx.session.token;
 
@@ -148,12 +162,12 @@ bot.command('pending', async (ctx) => {
   }
 });
 
-// Command to set user language
-bot.command('language', async (ctx) => {
+// Action to set user language
+bot.action('language', async (ctx) => {
   ctx.reply(getLocalizedString('LANGUAGE_PROMPT', ctx.session.language), {
     reply_markup: {
       inline_keyboard: [
-        [{ text: '🇷🇺 Russian', callback_data: 'ru' }],
+        [{ text: '🇷🇺 Русский', callback_data: 'ru' }],
         [{ text: '🇬🇧 English', callback_data: 'en' }]
       ]
     }
