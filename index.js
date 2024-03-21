@@ -1,3 +1,4 @@
+const process = require('process');
 const { Telegraf, session } = require('telegraf');
 const axios = require('axios');
 
@@ -18,16 +19,16 @@ function getLocalizedString(key, lang) {
 const getFormatedDate = (date, lang) => {
   return (new Date(date)).toLocaleString(lang, {
     month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-  })
-}
+  });
+};
 
 const BOT_TOKEN = process.env.API_KEY_BOT;
 const API_URL = process.env.API_URL;
 
 const bot = new Telegraf(BOT_TOKEN);
 
-const SESSION_STEP = { EMAIL: 'Email', PASSWORD: 'Password' }
-const USER_ROLE = { ADMIN: 'Admin', USER: 'User' }
+const SESSION_STEP = { EMAIL: 'Email', PASSWORD: 'Password' };
+const USER_ROLE = { ADMIN: 'Admin', USER: 'User' };
 
 bot.use(session());
 
@@ -126,7 +127,7 @@ bot.action('tickets', async (ctx) => {
 
         message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
         message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
-        message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt, ctx.session.language)}\n`
+        message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt, ctx.session.language)}\n`;
         message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'DONE' : 'NOT_DONE', ctx.session.language)}\n`;
 
         if (ticket.device) {
@@ -142,8 +143,8 @@ bot.action('tickets', async (ctx) => {
       ctx.reply(getLocalizedString('NO_TICKETS', ctx.session.language));
     }
   } catch (error) {
-      console.error('Error fetching tickets:', error);
-      ctx.reply(getLocalizedString('ERROR', ctx.session.language));
+    console.error('Error fetching tickets:', error);
+    ctx.reply(getLocalizedString('ERROR', ctx.session.language));
   }
 });
 
@@ -170,7 +171,7 @@ bot.action('pending', async (ctx) => {
 
           message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
           message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
-          message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt)}\n`
+          message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt)}\n`;
   
           if (ticket.device) {
             message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
@@ -215,5 +216,10 @@ bot.action('en', async (ctx) => {
 
 bot.launch();
 
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
+process.once('SIGINT', () => {
+  bot.stop('SIGINT');
+});
+
+process.once('SIGTERM', () => {
+  bot.stop('SIGTERM'); 
+});
