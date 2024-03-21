@@ -24,6 +24,7 @@ module.exports = {
   NO_PENDING_TICKETS: 'No current pending tickets.',
   ERROR: 'An error occurred while performing the operation.',
   TICKET_ID: 'Ticket ID',
+  TICKET_CREATED_AT: 'Ticket Created At',
   TICKET_TITLE: 'Ticket Title',
   TICKET_DESCRIPTION: 'Ticket Description',
   TICKET_STATUS: 'Ticket Status',
@@ -31,4 +32,6 @@ module.exports = {
   DEVICE_TITLE: 'Device Title',
   DEVICE_INVENTORY_NUMBER: 'Device Inventory Number',
   DEVICE_LOCATION: 'Device Location',
+  DONE: 'Done',
+  NOT_DONE: 'Not done',
 };

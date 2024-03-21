@@ -14,6 +14,14 @@ function getLocalizedString(key, lang) {
   return strings[key] || ''; // Return an empty string if the key is not found
 }
 
+const getFormatedDate = (date, lang) => {
+  console.log('lang: ', lang)
+
+  return (new Date(date)).toLocaleString(lang, {
+    month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+  })
+}
+
 const BOT_TOKEN = process.env.API_KEY_BOT;
 const API_URL = process.env.API_URL;
 
@@ -53,6 +61,7 @@ bot.use(async (ctx, next) => {
         const response = await axios.post(`${API_URL}/auth/login`, { email, password });
 
         ctx.session.isAuthenticated = true;
+        ctx.session.language = 'ru';
         ctx.session.user = response.data.user;
         ctx.session.token = response.data.token;
         ctx.session.refreshToken = response.data.refreshToken;
@@ -114,19 +123,19 @@ bot.action('tickets', async (ctx) => {
       let message = `<b>${getLocalizedString('YOUR_TICKETS', ctx.session.language)}</b>\n\n`;
 
       tickets.forEach(ticket => {
-        message += '<b>──────────────────</b>\n'; // Separator
+        message += '<b>──────────────────</b>\n';
 
-        message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`; // Ticket title
-        message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`; // Ticket description
-        message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'DONE' : 'NOT_DONE', ctx.session.language)}\n`; // Ticket status
+        message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
+        message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
+        message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt, ctx.session.language)}\n`
+        message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'DONE' : 'NOT_DONE', ctx.session.language)}\n`;
 
         if (ticket.device) {
-          message += `<b>${getLocalizedString('TICKET_DEVICE', ctx.session.language)}:</b>\n`; // Device section
-          message += `  <b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`; // Device title
-          message += `  <b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`; // Device inventory number
+          message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
+          message += `<b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`;
         }
 
-        message += '\n'; // Add empty line between tickets
+        message += '\n';
       });
 
       ctx.replyWithHTML(message);
@@ -158,18 +167,18 @@ bot.action('pending', async (ctx) => {
         let message = `<b>${getLocalizedString('PENDING_TICKETS', ctx.session.language)}</b>\n\n`;
 
         pendingTickets.forEach(ticket => {
-          message += '<b>──────────────────</b>\n'; // Separator
+          message += '<b>──────────────────</b>\n';
 
-          message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`; // Ticket title
-          message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`; // Ticket description
-
+          message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
+          message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
+          message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt)}\n`
+  
           if (ticket.device) {
-            message += `<b>${getLocalizedString('TICKET_DEVICE', ctx.session.language)}:</b>\n`; // Device section
-            message += `  <b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`; // Device title
-            message += `  <b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`; // Device inventory number
+            message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
+            message += `<b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`;
           }
 
-          message += '\n'; // Add empty line between tickets
+          message += '\n';
         });
 
         ctx.replyWithHTML(message);
@@ -197,12 +206,12 @@ bot.action('language', async (ctx) => {
 
 bot.action('ru', async (ctx) => {
   ctx.session.language = 'ru';
-  ctx.reply(getLocalizedString('LANGUAGE_SET_TO_RU', 'ru'));
+  ctx.reply(getLocalizedString('LANGUAGE_SET_TO_RU', ctx.session.language));
 });
 
 bot.action('en', async (ctx) => {
   ctx.session.language = 'en';
-  ctx.reply(getLocalizedString('LANGUAGE_SET_TO_EN', 'en'));
+  ctx.reply(getLocalizedString('LANGUAGE_SET_TO_EN', ctx.session.language));
 });
 
 bot.launch();
