@@ -14,9 +14,8 @@ function getLocalizedString(key, lang) {
   return strings[key] || ''; // Return an empty string if the key is not found
 }
 
+// Function to format the date
 const getFormatedDate = (date, lang) => {
-  console.log('lang: ', lang)
-
   return (new Date(date)).toLocaleString(lang, {
     month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' 
   })
