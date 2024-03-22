@@ -9,6 +9,55 @@ if (process.env.NODE_ENV !== 'production') {
 const RU_STRINGS = require('./strings_ru');
 const EN_STRINGS = require('./strings_en');
 
+let token = null;
+let refreshToken = null;
+
+// Add an interceptor to include the token in the request headers
+axios.interceptors.request.use(
+  (config) => {
+    config.headers.Authorization = `Bearer ${token}`;
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add an interceptor to handle 401 errors
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const { response } = error;
+
+    if (response && response.status === 401) {
+      if (token && refreshToken) {
+        try {
+          const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token, refreshToken })
+          });
+          const data = await refreshResponse.json();
+          token = data.token;
+          refreshToken = data.refreshToken;
+
+          error.config.headers.Authorization = `Bearer ${token}`;
+          return axios.request(error.config);
+        } catch (error) {
+          return Promise.reject(error);
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 // Function to select strings depending on the selected language
 function getLocalizedString(key, lang) {
   const strings = lang === 'en' ? EN_STRINGS : RU_STRINGS;
@@ -22,10 +71,10 @@ const getFormatedDate = (date, lang) => {
   });
 };
 
-const BOT_TOKEN = process.env.API_KEY_BOT;
+const API_KEY_BOT = process.env.API_KEY_BOT;
 const API_URL = process.env.API_URL;
 
-const bot = new Telegraf(BOT_TOKEN);
+const bot = new Telegraf(API_KEY_BOT);
 
 const SESSION_STEP = { EMAIL: 'Email', PASSWORD: 'Password' };
 const USER_ROLE = { ADMIN: 'Admin', USER: 'User' };
@@ -63,8 +112,9 @@ bot.use(async (ctx, next) => {
         ctx.session.isAuthenticated = true;
         ctx.session.language = 'ru';
         ctx.session.user = response.data.user;
-        ctx.session.token = response.data.token;
-        ctx.session.refreshToken = response.data.refreshToken;
+
+        token = response.data.token;
+        refreshToken = response.data.refreshToken;
 
         console.log('Successful authentication:', response.data);
         ctx.reply(getLocalizedString('VIEW_AVAILABLE_ACTIONS', ctx.session.language));
