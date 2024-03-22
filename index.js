@@ -11,6 +11,7 @@ const EN_STRINGS = require('./strings_en');
 
 let token = null;
 let refreshToken = null;
+let subscriptionIntervalId = null;
 
 // Add an interceptor to include the token in the request headers
 axios.interceptors.request.use(
@@ -57,6 +58,14 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Function to check if the time difference is within the specified number of minutes
+function isWithin5Minutes(currentTime, targetTime, minutes = 1) {
+  const differenceInMilliseconds = currentTime - targetTime;
+  const differenceInMinutes = differenceInMilliseconds / (1000 * 60);
+
+  return differenceInMinutes <= minutes;
+}
 
 // Function to select strings depending on the selected language
 function getLocalizedString(key, lang) {
@@ -258,12 +267,65 @@ bot.action('en', async (ctx) => {
   ctx.reply(getLocalizedString('LANGUAGE_SET_TO_EN', ctx.session.language));
 });
 
+// Action to subscribe to notifications
+bot.action('subscribe', async (ctx) => {
+  subscriptionIntervalId = setInterval(async () => {
+    const userId = ctx.session.user.id;
+  
+    try {
+      const response = await axios.get(ctx.session.user.role === USER_ROLE.ADMIN 
+        ? `${API_URL}/tickets?includeDevice=${true}` 
+        : `${API_URL}/tickets?userId=${userId}&includeDevice=${true}`
+      );
+  
+      const tickets = response.data.items;
+  
+      tickets.forEach(ticket => {
+        const currentTime = new Date();
+        const createdAtTime = new Date(ticket.createdAt);
+        const updatedAtTime = new Date(ticket.updatedAt);
+  
+        const isNew = isWithin5Minutes(currentTime, createdAtTime, 1);
+        const isUpdated = isWithin5Minutes(currentTime, updatedAtTime, 1);
+  
+        if (isNew || isUpdated) {
+          let message = isNew 
+            ? `<b>${getLocalizedString('TICKET_CREATED', ctx.session.language)}</b>\n\n`
+            : `<b>${getLocalizedString('TICKET_UPDATED', ctx.session.language)}</b>\n\n`;
+
+          message += '<b>──────────────────</b>\n';
+        
+          message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
+          message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
+          message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt, ctx.session.language)}\n`;
+          message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'COMPLETED' : 'IN_PROGRESS', ctx.session.language)}\n`;
+
+          if (ticket.device) {
+            message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
+            message += `<b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`;
+          }
+        
+          message += '\n';
+        
+          ctx.replyWithHTML(message);
+        }
+      });
+    } catch (error) {
+      console.error('An error occurred while checking for ticket updates:', error);
+    }
+  }, 1 * 60 * 1000); // Check every 1 minute
+
+  ctx.reply(getLocalizedString('SUBSCRIPTION_SUCCESS', ctx.session.language));
+});
+
 bot.launch();
 
 process.once('SIGINT', () => {
+  clearInterval(subscriptionIntervalId);
   bot.stop('SIGINT');
 });
 
 process.once('SIGTERM', () => {
+  clearInterval(subscriptionIntervalId);
   bot.stop('SIGTERM'); 
 });
