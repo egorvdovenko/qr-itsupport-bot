@@ -9,9 +9,10 @@ This is a Telegram bot designed to provide IT support. It allows users to view t
 
 ## Actions
 
-- `tickets`: Displays the user's tickets.
-- `pending`: Displays the current pending tickets.
-- `language`: Changes the bot's language.
+- `completed_tickets`: Displays the user's completed tickets.
+- `uncompleted_tickets`: Displays the user's uncompleted tickets.
+- `language`: Changes the bot's language. Allows to switch between English and Russian.
+- `subscribe`: Subscribes the user to notifications.
 
 ## Running the Bot
 
