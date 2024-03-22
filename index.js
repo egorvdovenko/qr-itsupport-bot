@@ -1,6 +1,7 @@
 const process = require('process');
-const { Telegraf, session } = require('telegraf');
 const axios = require('axios');
+
+const { Telegraf, session } = require('telegraf');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -60,10 +61,8 @@ axios.interceptors.response.use(
 );
 
 // Function to check if the time difference is within the specified number of minutes
-function isWithin5Minutes(currentTime, targetTime, minutes = 1) {
-  const differenceInMilliseconds = currentTime - targetTime;
-  const differenceInMinutes = differenceInMilliseconds / (1000 * 60);
-
+function isWithinTimeframe(currentTime, targetTime, minutes = 1) {
+  const differenceInMinutes = (currentTime - targetTime) / (1000 * 60);
   return differenceInMinutes <= minutes;
 }
 
@@ -285,8 +284,8 @@ bot.action('subscribe', async (ctx) => {
         const createdAtTime = new Date(ticket.createdAt);
         const updatedAtTime = new Date(ticket.updatedAt);
   
-        const isNew = isWithin5Minutes(currentTime, createdAtTime, 1);
-        const isUpdated = isWithin5Minutes(currentTime, updatedAtTime, 1);
+        const isNew = isWithinTimeframe(currentTime, createdAtTime, 1);
+        const isUpdated = isWithinTimeframe(currentTime, updatedAtTime, 1);
   
         if (isNew || isUpdated) {
           let message = isNew 
