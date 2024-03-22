@@ -97,38 +97,36 @@ bot.command('actions', async (ctx) => {
   ctx.replyWithMarkdown(getLocalizedString('AVAILABLE_ACTIONS', ctx.session.language), {
     reply_markup: {
       inline_keyboard: [
-        [{ text: getLocalizedString('VIEW_TICKETS', ctx.session.language), callback_data: 'tickets' }],
-        [{ text: getLocalizedString('VIEW_PENDING_TICKETS', ctx.session.language), callback_data: 'pending' }],
-        [{ text: getLocalizedString('CHANGE_LANGUAGE', ctx.session.language), callback_data: 'language' }]
+        [{ text: getLocalizedString('VIEW_COMPLETED_TICKETS', ctx.session.language), callback_data: 'completed_tickets' }],
+        [{ text: getLocalizedString('VIEW_UNCOMPLETED_TICKETS', ctx.session.language), callback_data: 'uncompleted_tickets' }],
+        [{ text: getLocalizedString('SUBSCRIBE_TO_NOTIFICATIONS', ctx.session.language), callback_data: 'subscribe' }],
+        [{ text: getLocalizedString('CHANGE_LANGUAGE', ctx.session.language), callback_data: 'language' }],
       ]
     }
   });
 });
 
-// Action to view user tickets
-bot.action('tickets', async (ctx) => {
+// Action to view completed tickets
+bot.action('completed_tickets', async (ctx) => {
   const userId = ctx.session.user.id;
-  const token = ctx.session.token;
 
   try {
-    const response = await axios.get(`${API_URL}/tickets?userId=${userId}&includeDevice=true`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const response = await axios.get(ctx.session.user.role === USER_ROLE.ADMIN 
+      ? `${API_URL}/tickets?includeDevice=${true}` 
+      : `${API_URL}/tickets?userId=${userId}&includeDevice=${true}`
+    );
 
-    const tickets = response.data.items;
+    const completedTickets = response.data.items.filter(ticket => ticket.isDone);
 
-    if (tickets.length > 0) {
-      let message = `<b>${getLocalizedString('YOUR_TICKETS', ctx.session.language)}</b>\n\n`;
+    if (completedTickets.length > 0) {
+      let message = `<b>${getLocalizedString('COMPLETED_TICKETS', ctx.session.language)}</b>\n\n`;
 
-      tickets.forEach(ticket => {
+      completedTickets.forEach(ticket => {
         message += '<b>──────────────────</b>\n';
 
         message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
         message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
         message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt, ctx.session.language)}\n`;
-        message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'DONE' : 'NOT_DONE', ctx.session.language)}\n`;
 
         if (ticket.device) {
           message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
@@ -140,55 +138,51 @@ bot.action('tickets', async (ctx) => {
 
       ctx.replyWithHTML(message);
     } else {
-      ctx.reply(getLocalizedString('NO_TICKETS', ctx.session.language));
+      ctx.reply(getLocalizedString('NO_COMPLETED_TICKETS', ctx.session.language));
     }
   } catch (error) {
-    console.error('Error fetching tickets:', error);
+    console.error('Error fetching completed tickets:', error);
     ctx.reply(getLocalizedString('ERROR', ctx.session.language));
   }
 });
 
-// Action to view current pending tickets (only for administrators)
-bot.action('pending', async (ctx) => {
-  const userRole = ctx.session.user.role;
-  const token = ctx.session.token;
+// Action to view uncompleted tickets
+bot.action('uncompleted_tickets', async (ctx) => {
+  const userId = ctx.session.user.id;
 
-  if (userRole === USER_ROLE.ADMIN) {
-    try {
-      const response = await axios.get(`${API_URL}/tickets?includeDevice=true`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+  try {
+    const response = await axios.get(ctx.session.user.role === USER_ROLE.ADMIN 
+      ? `${API_URL}/tickets?includeDevice=${true}` 
+      : `${API_URL}/tickets?userId=${userId}&includeDevice=${true}`
+    );
+      
+    const uncompletedTickets = response.data.items.filter(ticket => !ticket.isDone);
+
+    if (uncompletedTickets.length > 0) {
+      let message = `<b>${getLocalizedString('UNCOMPLETED_TICKETS', ctx.session.language)}</b>\n\n`;
+
+      uncompletedTickets.forEach(ticket => {
+        message += '<b>──────────────────</b>\n';
+
+        message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
+        message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
+        message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt, ctx.session.language)}\n`;
+  
+        if (ticket.device) {
+          message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
+          message += `<b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`;
         }
+
+        message += '\n';
       });
 
-      const pendingTickets = response.data.items.filter(ticket => !ticket.isDone);
-
-      if (pendingTickets.length > 0) {
-        let message = `<b>${getLocalizedString('PENDING_TICKETS', ctx.session.language)}</b>\n\n`;
-
-        pendingTickets.forEach(ticket => {
-          message += '<b>──────────────────</b>\n';
-
-          message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
-          message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
-          message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${getFormatedDate(ticket.createdAt)}\n`;
-  
-          if (ticket.device) {
-            message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
-            message += `<b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`;
-          }
-
-          message += '\n';
-        });
-
-        ctx.replyWithHTML(message);
-      } else {
-        ctx.reply(getLocalizedString('NO_PENDING_TICKETS', ctx.session.language));
-      }
-    } catch (error) {
-      console.error('Error fetching pending tickets:', error);
-      ctx.reply(getLocalizedString('ERROR', ctx.session.language));
+      ctx.replyWithHTML(message);
+    } else {
+      ctx.reply(getLocalizedString('NO_UNCOMPLETED_TICKETS', ctx.session.language));
     }
+  } catch (error) {
+    console.error('Error fetching uncompleted tickets:', error);
+    ctx.reply(getLocalizedString('ERROR', ctx.session.language));
   }
 });
 
