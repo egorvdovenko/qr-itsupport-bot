@@ -20,6 +20,7 @@ bot.command('actions', commands.viewAvailableActions);
 bot.action('completed_tickets', actions.viewCompletedTickets);
 bot.action('uncompleted_tickets', actions.viewUncompletedTickets);
 bot.action('subscribe', actions.subscribeToNotifications);
+bot.action('unsubscribe', actions.unsubscribeFromNotifications);
 bot.action('language', actions.changeLanguage);
 bot.action('ru', actions.changeLanguageToRu);
 bot.action('en', actions.changeLanguageToEn);
@@ -27,11 +28,19 @@ bot.action('en', actions.changeLanguageToEn);
 bot.launch();
 
 process.once('SIGINT', () => {
-  clearInterval(actions.subscriptionIntervalId);
+  if (actions.ws) {
+    // Close the WebSocket connection when the bot is stopped.
+    actions.ws.close();
+  }
+
   bot.stop('SIGINT');
 });
 
 process.once('SIGTERM', () => {
-  clearInterval(actions.subscriptionIntervalId);
+  if (actions.ws) {
+    // Close the WebSocket connection when the bot is stopped.
+    actions.ws.close();
+  }
+  
   bot.stop('SIGTERM'); 
 });

@@ -62,7 +62,7 @@ async function handlePasswordInput(ctx) {
   const password = ctx.message.text;
 
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+    const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
 
     ctx.session.isAuthenticated = true;
     ctx.session.language = 'ru'; // Change to appropriate default language

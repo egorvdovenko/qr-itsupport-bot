@@ -15,7 +15,8 @@
     "axios": "^1.6.8",
     "dotenv": "^16.4.5",
     "nodemon": "^3.1.0",
-    "telegraf": "^3.40.0"
+    "telegraf": "^3.40.0",
+    "ws": "^7.5.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0"

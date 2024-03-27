@@ -61,7 +61,7 @@ axios.interceptors.response.use(
     if (response && response.status === 401) {
       if (token && refreshToken) {
         try {
-          const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+          const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

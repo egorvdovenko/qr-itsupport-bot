@@ -23,6 +23,7 @@ async function viewAvailableActions(ctx) {
         [{ text: getLocalizedString('VIEW_COMPLETED_TICKETS', ctx.session.language), callback_data: 'completed_tickets' }],
         [{ text: getLocalizedString('VIEW_UNCOMPLETED_TICKETS', ctx.session.language), callback_data: 'uncompleted_tickets' }],
         [{ text: getLocalizedString('SUBSCRIBE_TO_NOTIFICATIONS', ctx.session.language), callback_data: 'subscribe' }],
+        [{ text: getLocalizedString('UNSUBSCRIBE_FROM_NOTIFICATIONS', ctx.session.language), callback_data: 'unsubscribe' }],
         [{ text: getLocalizedString('CHANGE_LANGUAGE', ctx.session.language), callback_data: 'language' }],
       ]
     }
