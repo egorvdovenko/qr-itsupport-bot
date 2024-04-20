@@ -1,6 +1,6 @@
 # qr-itsupport-bot
 
-This is a Telegram bot designed to provide IT support. It allows users to view their tickets, view pending tickets, and change the bot's language. The bot uses WebSocket technology for real-time communication, ensuring instant updates and seamless interaction between the bot and the users.
+This is a Telegram bot designed to provide IT support. It allows users to view their tickets, view pending tickets, subscribe to notifications and change the bot's language. The bot uses WebSocket technology for real-time communication, ensuring instant updates and seamless interaction between the bot and the users.
 
 ## Commands
 
