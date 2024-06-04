@@ -4,7 +4,7 @@ const { axios } = require('../utils/axios');
 const { getLocalizedString } = require('../utils/localization');
 const { formatDateTime } = require('../utils/dates');
 const { USER_ROLE } = require('../constants');
-const { API_URL, API_WS_URL } = require('../config');
+const { API_URL, WEBSOCKET_SERVER_URL } = require('../config');
 
 /**
  * WebSocket connection object.
@@ -143,58 +143,63 @@ async function changeLanguageToEn(ctx) {
  */
 async function subscribeToNotifications(ctx) {
   try {
-    ws = new WebSocket(API_WS_URL);
+    // Create a new WebSocket connection
+    const ws = new WebSocket(WEBSOCKET_SERVER_URL);
 
-    ws.on('open', function open() {
-      console.log('WebSocket connection established');
-    });
+    ws.onopen = () => {
+      console.log('Connected to WebSocket server.');
+    };
 
-    ws.on('close', function close() {
-      console.log('WebSocket connection closed');
-    });
+    // Event listener for receiving messages from the server
+    ws.onmessage = (event) => {
+      const { type, data: ticket } = JSON.parse(event.data);
 
-    ws.on('message', function incoming(message) {
-      const data = JSON.parse(message);
-      const ticket = data.data;
-
-      if (data.type === 'ticket_created') {
+      if (type === 'ticket_created') {
         let message = `<b>${getLocalizedString('TICKET_CREATED', ctx.session.language)}</b>\n\n`;
 
         message += '<b>──────────────────</b>\n';
-            
+          
         message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
         message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
         message += `<b>${getLocalizedString('TICKET_CREATED_AT', ctx.session.language)}:</b> ${formatDateTime(ticket.createdAt, ctx.session.language)}\n`;
         message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'COMPLETED' : 'IN_PROGRESS', ctx.session.language)}\n`;
-    
+  
         if (ticket.device) {
           message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
           message += `<b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`;
         }
-            
+          
         message += '\n';
-            
+          
         ctx.replyWithHTML(message);
-      } else if (data.type === 'ticket_updated') {
+      } else if (type === 'ticket_updated') {
         let message = `<b>${getLocalizedString('TICKET_UPDATED', ctx.session.language)}</b>\n\n`;
 
         message += '<b>──────────────────</b>\n';
-            
+          
         message += `<b>${getLocalizedString('TICKET_TITLE', ctx.session.language)}:</b> ${ticket.title}\n`;
         message += `<b>${getLocalizedString('TICKET_DESCRIPTION', ctx.session.language)}:</b> ${ticket.description}\n`;
         message += `<b>${getLocalizedString('TICKET_UPDATED_AT', ctx.session.language)}:</b> ${formatDateTime(ticket.updatedAt, ctx.session.language)}\n`;
         message += `<b>${getLocalizedString('TICKET_STATUS', ctx.session.language)}:</b> ${getLocalizedString(ticket.isDone ? 'COMPLETED' : 'IN_PROGRESS', ctx.session.language)}\n`;
-    
+  
         if (ticket.device) {
           message += `<b>${getLocalizedString('DEVICE_TITLE', ctx.session.language)}:</b> ${ticket.device.title}\n`;
           message += `<b>${getLocalizedString('DEVICE_INVENTORY_NUMBER', ctx.session.language)}:</b> ${ticket.device.inventoryNumber}\n`;
         }
-            
+          
         message += '\n';
-            
+          
         ctx.replyWithHTML(message);
       }
-    });
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from WebSocket server.');
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
 
     ctx.reply(getLocalizedString('SUBSCRIPTION_SUCCESS', ctx.session.language));
   } catch (error) {
