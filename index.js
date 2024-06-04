@@ -1,13 +1,13 @@
 const process = require('process');
 
 const { Telegraf, session } = require('telegraf');
-const { API_KEY_BOT } = require('./config');
+const { BOT_API_KEY } = require('./config');
 
 const middleware = require('./src/middleware');
 const commands = require('./src/commands');
 const actions = require('./src/actions');
 
-const bot = new Telegraf(API_KEY_BOT);
+const bot = new Telegraf(BOT_API_KEY);
 
 bot.use(session());
 

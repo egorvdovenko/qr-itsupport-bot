@@ -13,11 +13,6 @@ RUN npm ci
 # Bundle app source
 COPY . .
 
-# Set environment variables
-ENV API_KEY_BOT 7003979949:AAGnf7ji5UpB2XseSbUeVQY6z3y9ul9HCXc
-ENV API_URL https://ns1.119463.ip-ns.net/qr-itsupport-api
-ENV API_WS_URL https://ns1.119463.ip-ns.net/qr-itsupport-api:8040
-
 # Expose the app's port
 EXPOSE 8030
 
