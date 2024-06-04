@@ -42,7 +42,3 @@ This project uses several dependencies to function properly:
 ## Language Support
 
 This bot supports English and Russian. The language can be changed using the `language` action.
-
-## License
-
-This project is licensed under the ISC license.
