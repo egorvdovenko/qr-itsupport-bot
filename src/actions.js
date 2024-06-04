@@ -4,7 +4,7 @@ const { axios } = require('../utils/axios');
 const { getLocalizedString } = require('../utils/localization');
 const { formatDateTime } = require('../utils/dates');
 const { USER_ROLE } = require('../constants');
-const { API_URL, WEBSOCKET_SERVER_URL } = require('../config');
+const { API_URL, WEBSOCKET_API_URL } = require('../config');
 
 /**
  * WebSocket connection object.
@@ -144,7 +144,7 @@ async function changeLanguageToEn(ctx) {
 async function subscribeToNotifications(ctx) {
   try {
     // Create a new WebSocket connection
-    const ws = new WebSocket(WEBSOCKET_SERVER_URL);
+    const ws = new WebSocket(WEBSOCKET_API_URL);
 
     ws.onopen = () => {
       console.log('Connected to WebSocket server.');

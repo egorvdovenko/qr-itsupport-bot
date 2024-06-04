@@ -13,6 +13,10 @@ RUN npm ci
 # Bundle app source
 COPY . .
 
+# Set the environment variable
+ENV API_URL https://ns1.119463.ip-ns.net/qr-itsupport-api
+ENV WEBSOCKET_API_URL https://ns1.119463.ip-ns.net/qr-itsupport-websocket
+
 # Expose the app's port
 EXPOSE 8030
 
